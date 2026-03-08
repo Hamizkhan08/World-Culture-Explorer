@@ -191,8 +191,21 @@
 
         /* Mobile tweaks */
         @media (max-width: 768px) {
-            .hero h1 { font-size: 3rem; }
+            .hero h1 { font-size: 2.5rem; }
+            .hero p { font-size: 1.1rem; margin-bottom: 30px; }
             .navbar { background: rgba(10,10,10,0.95); padding: 15px 0; }
+            .navbar-brand { font-size: 1.3rem; }
+            .hero-content { padding: 0 15px; }
+            .features { padding: 60px 0; }
+            .feature-card { padding: 30px 20px; }
+            .btn-cta, .btn-outline-custom { padding: 10px 25px; font-size: 0.9rem; }
+        }
+
+        @media (max-width: 480px) {
+            .hero h1 { font-size: 2rem; }
+            .hero p { font-size: 0.95rem; }
+            .hero-content span { font-size: 0.75rem !important; letter-spacing: 2px !important; }
+            .features { padding: 40px 0; }
         }
     </style>
 </head>
@@ -226,7 +239,7 @@
             
             <p>From ancient history to modern cuisine. Experience a premium,<br class="d-none d-md-block"> immersive 3D journey across 195 countries.</p>
             
-            <div class="d-flex justify-content-center gap-4 mt-5">
+            <div class="d-flex flex-column flex-sm-row justify-content-center gap-3 mt-5">
                 {% if current_user.is_authenticated %}
                     <a href="/map" class="btn btn-cta btn-lg px-5">Continue Exploring</a>
                 {% else %}

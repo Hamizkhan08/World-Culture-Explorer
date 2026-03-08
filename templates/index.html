@@ -90,6 +90,59 @@
         .dropdown-menu { border-radius: 12px; margin-top: 10px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
         .dropdown-item { padding: 8px 20px; border-radius: 6px; }
 
+        /* Mobile hamburger */
+        .mobile-toggle {
+            display: none;
+            border: none;
+            background: rgba(255,255,255,0.1);
+            color: #ffc107;
+            border-radius: 8px;
+            width: 40px; height: 40px;
+            font-size: 1.3rem;
+            align-items: center; justify-content: center;
+            cursor: pointer;
+        }
+
+        /* Mobile nav drawer */
+        .mobile-nav {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(10,10,10,0.97);
+            z-index: 9999;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            padding: 30px;
+        }
+        .mobile-nav.open { display: flex; }
+        .mobile-nav-close {
+            position: absolute; top: 20px; right: 20px;
+            border: none; background: none; color: white; font-size: 2rem; cursor: pointer;
+        }
+        .mobile-nav .mobile-search {
+            width: 100%; max-width: 320px;
+        }
+        .mobile-nav .mobile-search input {
+            width: 100%; border-radius: 20px; padding: 12px 18px;
+            background: #333; border: 1px solid #444; color: white; font-size: 1rem;
+        }
+        .mobile-nav .mobile-view-switcher {
+            display: flex; gap: 15px;
+        }
+        .mobile-nav .mobile-view-switcher .view-btn {
+            font-size: 1.1rem; padding: 10px 20px; opacity: 0.7;
+        }
+        .mobile-nav .mobile-view-switcher .view-btn.active { opacity: 1; color: #ffc107 !important; }
+        .mobile-nav .mobile-nav-links {
+            display: flex; flex-direction: column; align-items: center; gap: 15px;
+        }
+        .mobile-nav .mobile-nav-links a,
+        .mobile-nav .mobile-nav-links button {
+            font-size: 1.1rem;
+        }
+
         /* --- THEMES --- */
         /* Dark Mode */
         body.dark-mode { background-color: #222; }
@@ -112,6 +165,32 @@
         body.light-mode .theme-btn { color: #333; background: rgba(0,0,0,0.05); }
         body.light-mode .btn-outline-warning { color: #333; border-color: #333; }
         body.light-mode .btn-outline-warning:hover { background: #333; color: white; }
+
+        /* ===== MOBILE RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .navbar { height: auto; min-height: 56px; padding: 8px 12px !important; }
+            .navbar-brand { font-size: 1.2rem; gap: 6px; }
+            .navbar-brand span { display: inline !important; font-size: 0.95rem; }
+            
+            /* Hide desktop nav items on mobile */
+            .desktop-nav { display: none !important; }
+            .mobile-toggle { display: flex; }
+            
+            #view-container { height: calc(100vh - 56px); }
+            #map { height: 100%; }
+            #globeViz { height: 100%; }
+
+            /* Flash messages */
+            div[style*="position: absolute"][style*="width: 350px"] {
+                width: 90% !important;
+                right: 5% !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .navbar { padding: 6px 10px !important; }
+            .navbar-brand { font-size: 1rem; }
+        }
     </style>
 </head>
 <body class="dark-mode">
@@ -120,10 +199,11 @@
         
         <a class="navbar-brand fw-bold text-warning" href="#">
             <i class="fas fa-globe-americas fa-lg"></i>
-            <span class="d-none d-md-inline">Culture Explorer</span>
+            <span>Culture Explorer</span>
         </a>
         
-        <div class="d-none d-md-flex" id="viewSwitcher">
+        <!-- Desktop nav items -->
+        <div class="d-none d-md-flex desktop-nav" id="viewSwitcher">
             <div class="view-btn active text-theme" onclick="switchView('flat')" id="btnFlat">
                 <i class="fas fa-map"></i> 2D Map
             </div>
@@ -133,7 +213,7 @@
             </div>
         </div>
 
-        <div class="d-flex align-items-center gap-3">
+        <div class="d-none d-md-flex desktop-nav align-items-center gap-3">
             
             <div class="input-group">
                 <input id="searchInput" class="form-control" type="search" placeholder="Find a country..." aria-label="Search">
@@ -176,7 +256,46 @@
                 <i id="themeIcon" class="fas fa-sun"></i>
             </button>
         </div>
+
+        <!-- Mobile hamburger button -->
+        <button class="mobile-toggle" onclick="document.getElementById('mobileNav').classList.add('open')">
+            <i class="fas fa-bars"></i>
+        </button>
     </nav>
+
+    <!-- Mobile Navigation Drawer -->
+    <div class="mobile-nav" id="mobileNav">
+        <button class="mobile-nav-close" onclick="document.getElementById('mobileNav').classList.remove('open')">&times;</button>
+        
+        <div class="mobile-search">
+            <input type="search" placeholder="Find a country..." id="mobileSearchInput"
+                onkeydown="if(event.key==='Enter'){searchCountryMobile()}">
+        </div>
+        
+        <div class="mobile-view-switcher">
+            <div class="view-btn active text-white" onclick="switchView('flat');document.getElementById('mobileNav').classList.remove('open')" id="btnFlatM">
+                <i class="fas fa-map"></i> 2D Map
+            </div>
+            <div class="view-btn text-white" onclick="switchView('globe');document.getElementById('mobileNav').classList.remove('open')" id="btnGlobeM">
+                <i class="fas fa-globe"></i> 3D Globe
+            </div>
+        </div>
+
+        <div class="mobile-nav-links">
+            {% if user.is_authenticated %}
+                <span class="text-warning fw-bold"><i class="fas fa-user me-2"></i>{{ user.username }}</span>
+                {% for fav in user.favorites %}
+                    <a href="/country/{{ fav.country_name }}" class="text-white text-decoration-none">⭐ {{ fav.country_name }}</a>
+                {% endfor %}
+                <a href="/logout" class="btn btn-outline-danger rounded-pill px-4 mt-2">Logout</a>
+            {% else %}
+                <a href="/login" class="btn btn-outline-warning rounded-pill px-4">Login</a>
+            {% endif %}
+            <button class="theme-btn" onclick="toggleTheme()" title="Toggle Theme" style="margin-left:0">
+                <i class="fas fa-sun"></i>
+            </button>
+        </div>
+    </div>
 
     <div style="position: absolute; top: 90px; right: 20px; z-index: 9999; width: 350px;">
         {% with messages = get_flashed_messages(with_categories=true) %}
@@ -320,6 +439,14 @@
         // --- 6. SEARCH LOGIC ---
         function searchCountry() {
             var input = document.getElementById('searchInput').value.trim();
+            if (!input || !geoData) return;
+            const found = geoData.features.find(f => f.properties.name.toLowerCase() === input.toLowerCase());
+            if (found) window.location.href = `/country/${found.properties.name}`;
+            else alert("Country not found! Please check spelling.");
+        }
+
+        function searchCountryMobile() {
+            var input = document.getElementById('mobileSearchInput').value.trim();
             if (!input || !geoData) return;
             const found = geoData.features.find(f => f.properties.name.toLowerCase() === input.toLowerCase());
             if (found) window.location.href = `/country/${found.properties.name}`;
