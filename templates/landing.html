@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>World Cultural Explorer</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- CORE TYPOGRAPHY & COLORS --- */
+        :root {
+            --bg-dark: #0a0a0a;
+            --accent: #d4af37; /* Changed to a more "Cultural Gold" */
+            --text-light: #f8f9fa;
+            --glass: rgba(20, 20, 20, 0.7);
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3, .navbar-brand {
+            font-family: 'Playfair Display', serif; 
+        }
+
+        /* --- BREATHABLE NAVBAR --- */
+        .navbar {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 25px 0; /* Extra spacing for breathability */
+            transition: all 0.4s ease;
+        }
+
+        .navbar-brand {
+            font-size: 1.8rem;
+            letter-spacing: 1px;
+            color: var(--text-light) !important;
+        }
+        
+        .navbar-brand i { color: var(--accent); }
+
+        .nav-link {
+            font-weight: 500;
+            font-size: 1rem;
+            color: rgba(255,255,255,0.9) !important;
+            transition: 0.3s;
+        }
+
+        .nav-link:hover {
+            color: var(--accent) !important;
+        }
+
+        /* Action Buttons */
+        .btn-cta {
+            background: var(--accent);
+            color: #000;
+            border-radius: 50px;
+            padding: 12px 35px;
+            font-weight: 600;
+            transition: transform 0.3s, box-shadow 0.3s;
+            border: none;
+            letter-spacing: 0.5px;
+        }
+        .btn-cta:hover {
+            background: #e5c150;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(212, 175, 55, 0.3);
+        }
+
+        .btn-outline-custom {
+            border: 1px solid rgba(255,255,255,0.4);
+            color: white;
+            border-radius: 50px;
+            padding: 12px 35px;
+            font-weight: 600;
+            transition: 0.3s;
+            letter-spacing: 0.5px;
+        }
+        .btn-outline-custom:hover {
+            border-color: var(--text-light);
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+
+        /* --- HERO SECTION --- */
+        .hero {
+            height: 100vh;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            /* Cultural Background Image */
+            background: linear-gradient(180deg, rgba(10,10,10,0.4) 0%, rgba(10,10,10,1) 100%), 
+                        url('https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=2070&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+
+        .hero-content {
+            z-index: 2;
+            max-width: 900px;
+            padding: 0 20px;
+            animation: fadeUp 1s ease-out;
+        }
+
+        .hero h1 {
+            font-size: 5rem;
+            line-height: 1.1;
+            margin-bottom: 25px;
+        }
+
+        .hero p {
+            font-size: 1.5rem;
+            font-weight: 300;
+            color: rgba(255,255,255,0.85);
+            margin-bottom: 50px;
+            line-height: 1.6;
+        }
+
+        /* --- FEATURES SECTION --- */
+        .features {
+            padding: 120px 0;
+            background: var(--bg-dark);
+        }
+
+        .feature-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.05);
+            padding: 50px 30px;
+            border-radius: 24px;
+            text-align: center;
+            transition: 0.4s ease;
+            height: 100%;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            background: rgba(255,255,255,0.06);
+            border-color: var(--accent);
+        }
+
+        .icon-circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: rgba(212, 175, 55, 0.1);
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin: 0 auto 30px;
+            transition: 0.4s;
+        }
+
+        .feature-card:hover .icon-circle {
+            background: var(--accent);
+            color: #000;
+            box-shadow: 0 0 30px rgba(212, 175, 55, 0.3);
+        }
+
+        /* --- FOOTER --- */
+        footer {
+            padding: 60px 0;
+            background: #050505;
+            border-top: 1px solid #222;
+            text-align: center;
+        }
+        .social-link {
+            color: #666;
+            font-size: 1.5rem;
+            margin: 0 15px;
+            transition: 0.3s;
+        }
+        .social-link:hover { color: var(--accent); transform: scale(1.2); }
+
+        /* Animation */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Mobile tweaks */
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 3rem; }
+            .navbar { background: rgba(10,10,10,0.95); padding: 15px 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container d-flex justify-content-between align-items-center">
+            
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-globe-americas"></i> World Cultural Explorer
+            </a>
+            
+            <div class="d-flex align-items-center gap-3">
+                {% if current_user.is_authenticated %}
+                    <span class="text-white-50 d-none d-md-block" style="font-size: 0.9rem;">Welcome back, {{ current_user.username }}</span>
+                    <a href="/map" class="btn btn-cta">Launch Map <i class="fas fa-arrow-right ms-2"></i></a>
+                {% else %}
+                    <a href="/login" class="nav-link text-white d-none d-md-block">Log In</a>
+                    <a href="/register" class="btn btn-outline-custom">Register</a>
+                {% endif %}
+            </div>
+
+        </div>
+    </nav>
+
+    <header class="hero">
+        <div class="hero-content">
+            <span class="text-white-50 text-uppercase ls-2 fw-bold mb-3 d-block" style="letter-spacing: 3px; font-size: 0.9rem;">Explore • Learn • Travel</span>
+            
+            <h1>Uncover the Soul of<br><span style="color: var(--accent);">Every Nation</span></h1>
+            
+            <p>From ancient history to modern cuisine. Experience a premium,<br class="d-none d-md-block"> immersive 3D journey across 195 countries.</p>
+            
+            <div class="d-flex justify-content-center gap-4 mt-5">
+                {% if current_user.is_authenticated %}
+                    <a href="/map" class="btn btn-cta btn-lg px-5">Continue Exploring</a>
+                {% else %}
+                    <a href="/login" class="btn btn-cta btn-lg">Log In</a>
+                    <a href="/register" class="btn btn-outline-custom btn-lg">Register Now</a>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    <section class="features">
+        <div class="container">
+            <div class="row g-5">
+                <div class="col-lg-4">
+                    <div class="feature-card">
+                        <div class="icon-circle"><i class="fas fa-cube"></i></div>
+                        <h3>3D Globe Engine</h3>
+                        <p class="text-white-50 mt-3">Interact with a high-fidelity 3D representation of Earth using real-time geospatial data.</p>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="feature-card">
+                        <div class="icon-circle"><i class="fas fa-graduation-cap"></i></div>
+                        <h3>Cultural Mastery</h3>
+                        <p class="text-white-50 mt-3">Deep dive into vetted facts about cuisine, history, and festivals. Test your skills with AI quizzes.</p>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="feature-card">
+                        <div class="icon-circle"><i class="fas fa-film"></i></div>
+                        <h3>Visual Journey</h3>
+                        <p class="text-white-50 mt-3">Watch curated 4K travel documentaries and save your favorite destinations.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <h4 class="navbar-brand mb-4 text-white" style="font-size: 1.5rem;">World Cultural Explorer</h4>
+            <div class="mb-4">
+                <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+                <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+                <a href="#" class="social-link"><i class="fab fa-github"></i></a>
+            </div>
+            <p class="text-white-50 small">&copy; 2025 World Cultural Explorer. Designed for the curious.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Navbar blur effect on scroll
+        window.addEventListener('scroll', function() {
+            const navbar = document.querySelector('.navbar');
+            if (window.scrollY > 50) {
+                navbar.style.background = 'rgba(10, 10, 10, 0.95)';
+                navbar.style.padding = '15px 0';
+            } else {
+                navbar.style.background = 'rgba(20, 20, 20, 0.7)';
+                navbar.style.padding = '25px 0';
+            }
+        });
+    </script>
+</body>
+</html>

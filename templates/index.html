@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Culturer Explorer</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
+    <style>
+        body, html { height: 100%; margin: 0; padding: 0; overflow: hidden; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+        
+        /* Container styles */
+        #view-container { position: relative; height: 92vh; width: 100%; background: #1a1a1a; transition: background 0.3s; }
+        #map { height: 100%; width: 100%; z-index: 1; }
+        #globeViz { height: 100%; width: 100%; display: none; z-index: 2; } 
+
+        /* --- MODERN NAVBAR STYLES --- */
+        .navbar { 
+            height: 8vh; 
+            min-height: 70px;
+            z-index: 1000; 
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px); /* Glassmorphism Effect */
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .navbar-brand {
+            font-size: 1.5rem;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* View Switcher (Pill Shape) */
+        #viewSwitcher {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 5px 15px;
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .view-btn { 
+            cursor: pointer; 
+            font-weight: 600; 
+            font-size: 0.9rem;
+            opacity: 0.7; 
+            transition: all 0.2s ease; 
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .view-btn:hover { opacity: 1; transform: translateY(-1px); }
+        .view-btn.active { opacity: 1; color: #ffc107 !important; border-bottom: 2px solid #ffc107; padding-bottom: 2px; }
+
+        /* Search Input */
+        #searchInput {
+            width: 250px;
+            border-radius: 20px;
+            padding-left: 15px;
+            transition: width 0.3s ease, background 0.3s;
+        }
+        #searchInput:focus { width: 300px; box-shadow: none; border-color: #ffc107; }
+
+        /* Buttons & Icons */
+        .btn-warning { border-radius: 20px; padding: 6px 20px; font-weight: 600; transition: transform 0.2s; }
+        .btn-warning:hover { transform: scale(1.05); }
+        
+        .theme-btn { 
+            border: none; 
+            background: rgba(255,255,255,0.1); 
+            border-radius: 50%;
+            width: 40px; height: 40px;
+            display: flex; align-items: center; justify-content: center;
+            color: #ffc107; 
+            font-size: 1.2rem; 
+            transition: all 0.3s;
+            margin-left: 15px;
+        }
+        .theme-btn:hover { background: rgba(255,255,255,0.2); transform: rotate(15deg); }
+
+        /* Auth Dropdown */
+        .user-avatar { width: 32px; height: 32px; background: #ffc107; color: #333; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 8px; }
+        .dropdown-menu { border-radius: 12px; margin-top: 10px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        .dropdown-item { padding: 8px 20px; border-radius: 6px; }
+
+        /* --- THEMES --- */
+        /* Dark Mode */
+        body.dark-mode { background-color: #222; }
+        body.dark-mode .navbar { background-color: rgba(26, 26, 26, 0.9); border-bottom: 1px solid #333; }
+        body.dark-mode #searchInput { background: #333; border: 1px solid #444; color: white; }
+        body.dark-mode .text-theme { color: #f8f9fa; }
+        body.dark-mode .dropdown-menu { background: #2c2c2c; border: 1px solid #444; }
+        body.dark-mode .dropdown-item { color: #eee; }
+        body.dark-mode .dropdown-item:hover { background: #444; }
+
+        /* Light Mode */
+        body.light-mode { background-color: #f8f9fa; }
+        body.light-mode .navbar { background-color: rgba(255, 255, 255, 0.95); border-bottom: 1px solid #e0e0e0; }
+        body.light-mode #searchInput { background: #f1f3f5; border: 1px solid #ced4da; color: #333; }
+        body.light-mode .navbar-brand { color: #333 !important; }
+        body.light-mode .text-theme { color: #333; }
+        body.light-mode #viewSwitcher { background: rgba(0,0,0,0.05); border-color: rgba(0,0,0,0.1); }
+        body.light-mode .view-btn { color: #555; }
+        body.light-mode .view-btn.active { color: #0d6efd !important; border-bottom-color: #0d6efd; }
+        body.light-mode .theme-btn { color: #333; background: rgba(0,0,0,0.05); }
+        body.light-mode .btn-outline-warning { color: #333; border-color: #333; }
+        body.light-mode .btn-outline-warning:hover { background: #333; color: white; }
+    </style>
+</head>
+<body class="dark-mode">
+
+    <nav class="navbar navbar-expand-lg px-4 d-flex justify-content-between align-items-center">
+        
+        <a class="navbar-brand fw-bold text-warning" href="#">
+            <i class="fas fa-globe-americas fa-lg"></i>
+            <span class="d-none d-md-inline">Culture Explorer</span>
+        </a>
+        
+        <div class="d-none d-md-flex" id="viewSwitcher">
+            <div class="view-btn active text-theme" onclick="switchView('flat')" id="btnFlat">
+                <i class="fas fa-map"></i> 2D Map
+            </div>
+            <div style="width: 1px; height: 15px; background: rgba(128,128,128,0.5);"></div>
+            <div class="view-btn text-theme" onclick="switchView('globe')" id="btnGlobe">
+                <i class="fas fa-globe"></i> 3D Globe
+            </div>
+        </div>
+
+        <div class="d-flex align-items-center gap-3">
+            
+            <div class="input-group">
+                <input id="searchInput" class="form-control" type="search" placeholder="Find a country..." aria-label="Search">
+                <button class="btn btn-warning" onclick="searchCountry()">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+            
+            {% if user.is_authenticated %}
+                <div class="dropdown">
+                    <button class="btn btn-link text-decoration-none text-theme dropdown-toggle d-flex align-items-center" type="button" data-bs-toggle="dropdown">
+                        <span class="user-avatar">{{ user.username[0] | upper }}</span>
+                        <span class="d-none d-lg-inline fw-bold">{{ user.username }}</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-lg animate slideIn">
+                        <li><h6 class="dropdown-header text-warning text-uppercase small ls-1">My Collection</h6></li>
+                        
+                        <div style="max-height: 200px; overflow-y: auto;">
+                        {% for fav in user.favorites %}
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center justify-content-between" href="/country/{{ fav.country_name }}">
+                                    <span>{{ fav.country_name }}</span>
+                                    <i class="fas fa-chevron-right small opacity-50"></i>
+                                </a>
+                            </li>
+                        {% else %}
+                            <li><span class="dropdown-item text-muted small fst-italic">No favorites saved yet.</span></li>
+                        {% endfor %}
+                        </div>
+
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger fw-bold" href="/logout"><i class="fas fa-sign-out-alt me-2"></i> Logout</a></li>
+                    </ul>
+                </div>
+            {% else %}
+                <a href="/login" class="btn btn-outline-warning px-4 rounded-pill fw-bold">Login</a>
+            {% endif %}
+            
+            <button class="theme-btn" onclick="toggleTheme()" title="Toggle Theme">
+                <i id="themeIcon" class="fas fa-sun"></i>
+            </button>
+        </div>
+    </nav>
+
+    <div style="position: absolute; top: 90px; right: 20px; z-index: 9999; width: 350px;">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show shadow-lg border-0 d-flex align-items-center" role="alert">
+                        <i class="fas fa-info-circle me-3 fs-4"></i>
+                        <div>{{ message }}</div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <div id="view-container">
+        <div id="map"></div>
+        <div id="globeViz"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/globe.gl"></script>
+
+    <script>
+        // --- GLOBAL STATE ---
+        let currentView = 'flat';
+        let geoData = null;
+        let map = null;
+        let geojsonLayer = null;
+        let globe = null;
+
+        // --- 1. INITIALIZE FLAT MAP ---
+        const darkTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 });
+        const lightTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 });
+
+        map = L.map('map', { center: [20, 0], zoom: 2, layers: [darkTiles], zoomControl: false });
+        L.control.zoom({ position: 'bottomright' }).addTo(map); // Move zoom controls
+
+        function style(feature) {
+            const isLight = document.body.classList.contains('light-mode');
+            return { 
+                fillColor: '#ffc107', 
+                weight: 1, 
+                opacity: 1, 
+                color: isLight ? '#999' : '#444', 
+                dashArray: '', 
+                fillOpacity: 0.1 
+            };
+        }
+
+        function highlightFeature(e) { 
+            var layer = e.target;
+            layer.setStyle({ weight: 2, color: '#fff', fillOpacity: 0.3, fillColor: '#ffc107' });
+            layer.bringToFront();
+        }
+        function resetHighlight(e) { geojsonLayer.resetStyle(e.target); }
+        function onCountryClick(e) { window.location.href = `/country/${e.target.feature.properties.name}`; }
+
+        function onEachFeature(feature, layer) {
+            layer.on({ mouseover: highlightFeature, mouseout: resetHighlight, click: onCountryClick });
+        }
+
+        // --- 2. DATA LOAD ---
+        fetch('https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json')
+            .then(r => r.json())
+            .then(data => {
+                geoData = data; 
+                geojsonLayer = L.geoJSON(data, { style: style, onEachFeature: onEachFeature }).addTo(map);
+                initGlobe(); 
+            });
+
+        // --- 3. 3D GLOBE ---
+        function initGlobe() {
+            globe = Globe()
+                .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-night.jpg') 
+                .backgroundImageUrl('https://unpkg.com/three-globe/example/img/night-sky.png')
+                .polygonsData(geoData.features)
+                .polygonCapColor(() => 'rgba(255, 193, 7, 0.05)')
+                .polygonSideColor(() => 'rgba(255, 193, 7, 0.1)')
+                .polygonStrokeColor(() => '#555')
+                .polygonAltitude(0.01)
+                .onPolygonHover(hoverD => {
+                    globe.polygonCapColor(d => d === hoverD ? 'rgba(255, 193, 7, 0.4)' : 'rgba(255, 193, 7, 0.05)');
+                    document.body.style.cursor = hoverD ? 'pointer' : 'default';
+                })
+                .onPolygonClick(d => { window.location.href = `/country/${d.properties.name}`; })
+                (document.getElementById('globeViz'));
+            
+            globe.controls().autoRotate = true;
+            globe.controls().autoRotateSpeed = 0.3;
+        }
+
+        // --- 4. SWITCHER LOGIC ---
+        function switchView(view) {
+            currentView = view;
+            const flatDiv = document.getElementById('map');
+            const globeDiv = document.getElementById('globeViz');
+            const btnFlat = document.getElementById('btnFlat');
+            const btnGlobe = document.getElementById('btnGlobe');
+
+            if (view === 'flat') {
+                flatDiv.style.display = 'block';
+                globeDiv.style.display = 'none';
+                btnFlat.classList.add('active');
+                btnGlobe.classList.remove('active');
+                setTimeout(() => { map.invalidateSize(); }, 100); 
+            } else {
+                flatDiv.style.display = 'none';
+                globeDiv.style.display = 'block';
+                btnFlat.classList.remove('active');
+                btnGlobe.classList.add('active');
+            }
+        }
+
+        // --- 5. THEME LOGIC ---
+        function toggleTheme() {
+            const body = document.body;
+            const icon = document.getElementById('themeIcon');
+            
+            body.classList.toggle('light-mode');
+            const isLight = body.classList.contains('light-mode');
+            
+            if (isLight) {
+                map.removeLayer(darkTiles); map.addLayer(lightTiles);
+                body.classList.remove('dark-mode');
+                icon.className = 'fas fa-moon text-dark';
+                if(globe) {
+                    globe.globeImageUrl('https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg');
+                    globe.backgroundImageUrl('//unpkg.com/three-globe/example/img/night-sky.png');
+                }
+            } else {
+                map.removeLayer(lightTiles); map.addLayer(darkTiles);
+                body.classList.add('dark-mode');
+                icon.className = 'fas fa-sun';
+                if(globe) globe.globeImageUrl('https://unpkg.com/three-globe/example/img/earth-night.jpg');
+            }
+            if(geojsonLayer) geojsonLayer.setStyle(style);
+        }
+
+        // --- 6. SEARCH LOGIC ---
+        function searchCountry() {
+            var input = document.getElementById('searchInput').value.trim();
+            if (!input || !geoData) return;
+            const found = geoData.features.find(f => f.properties.name.toLowerCase() === input.toLowerCase());
+            if (found) window.location.href = `/country/${found.properties.name}`;
+            else alert("Country not found! Please check spelling.");
+        }
+    </script>
+</body>
+</html>
