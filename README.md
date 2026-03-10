@@ -158,6 +158,3 @@ This project is licensed under the **MIT License**.
 
 ---
 
-<p align="center">
-  Made with ❤️ for the culturally curious.
-</p>
